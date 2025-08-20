@@ -1,1 +1,30 @@
-test
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"                   # Enable Traefik dashboard
+      - "--api.insecure=false"                   # Don't expose it publicly without auth
+      - "--entrypoints.web.address=:80"          # HTTP
+      - "--entrypoints.websecure.address=:443"   # HTTPS
+      - "--providers.docker=true"                # Enable docker provider
+      - "--providers.docker.exposedbydefault=false"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=your@email.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    networks:
+      - kami-net
+
+networks:
+  kami-net:
+    external: true
